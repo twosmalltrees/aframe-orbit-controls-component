@@ -202,10 +202,10 @@ AFRAME.registerComponent('orbit-controls', {
 
 
     handleRenderTargetLoaded: function()
-	{
-	    this.canvasEl = this.sceneEl.canvas;
-		this.addEventListeners();
-	},
+  	{
+  	    this.canvasEl = this.sceneEl.canvas;
+  		  this.addEventListeners();
+  	},
 
 
     bindMethods: function () {
@@ -634,8 +634,6 @@ AFRAME.registerComponent('orbit-controls', {
     // KEYBOARD
 
     handleKeyDown: function(event) {
-        //console.log( 'handleKeyDown' );
-
         switch ( event.keyCode ) {
             case this.keys.UP:
                 this.pan(0, this.data.keyPanSpeed);
@@ -693,27 +691,26 @@ AFRAME.registerComponent('orbit-controls', {
     },
 
     pan: function( deltaX, deltaY ) { // deltaX and deltaY are in pixels; right and down are positive
-        // var offset = new THREE.Vector3();
-        // var element = this.canvasEl === document ? this.canvasEl.body : this.canvasEl;
-        // if ( this.cameraType === 'PerspectiveCamera'  ) // perspective
-        // {
-        //     var position = this.object.position;
-        //     offset.copy( position ).sub( this.target );
-        //     var targetDistance = offset.length();
-        //     targetDistance *= Math.tan(( this.object.fov / 2 ) * Math.PI / 180.0 ); // half of the fov is center to top of screen
-        //
-        //     this.panLeft(2 * deltaX * targetDistance / element.clientHeight, this.object.matrix); // we actually don't use screenWidth, since perspective camera is fixed to screen height
-        //     this.panUp(2 * deltaY * targetDistance / element.clientHeight, this.object.matrix);
-        // }
-        // else if ( this.cameraType === 'OrthographicCamera' ) // orthographic
-        // {
-        //     this.panLeft(deltaX * ( this.object.right - this.object.left ) / this.camera.zoom / element.clientWidth, this.object.matrix );
-        //     this.panUp(deltaY * ( this.object.top - this.object.bottom ) / this.camera.zoom / element.clientHeight, this.object.matrix);
-        // }
-        // else { // camera neither orthographic nor perspective
-        //     console.warn('Trying to pan: WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.');
-        //     this.data.enablePan = false;
-        // }
+        var offset = new THREE.Vector2(deltaX, deltaY);
+        var element = this.canvasEl === document ? this.canvasEl.body : this.canvasEl;
+        if ( this.cameraType === 'PerspectiveCamera'  ) // perspective
+        {
+            var position = this.object.position;
+            offset.copy( position ).sub( this.target );
+            var targetDistance = offset.length();
+            targetDistance *= Math.tan(( this.camera.fov / 2 ) * Math.PI / 180.0 ); // half of the fov is center to top of screen
+            this.panLeft(2 * deltaX * targetDistance / element.clientHeight, this.object.matrix); // we actually don't use screenWidth, since perspective camera is fixed to screen height
+            this.panUp(2 * deltaY * targetDistance / element.clientHeight, this.object.matrix);
+        }
+        else if ( this.cameraType === 'OrthographicCamera' ) // orthographic
+        {
+            this.panLeft(deltaX * ( this.object.right - this.object.left ) / this.camera.zoom / element.clientWidth, this.object.matrix );
+            this.panUp(deltaY * ( this.object.top - this.object.bottom ) / this.camera.zoom / element.clientHeight, this.object.matrix);
+        }
+        else { // camera neither orthographic nor perspective
+            console.warn('Trying to pan: WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.');
+            this.data.enablePan = false;
+        }
     },
 
     dollyIn: function( dollyScale ) {
@@ -760,8 +757,6 @@ AFRAME.registerComponent('orbit-controls', {
 
     updateView: function()
     {
-        // console.log( 'update view' );
-
         var offset = new THREE.Vector3();
 
 		var quat = new THREE.Quaternion().setFromUnitVectors( this.object.up, new THREE.Vector3( 0, 1, 0 ) ); // so camera.up is the orbit axis
@@ -791,9 +786,7 @@ AFRAME.registerComponent('orbit-controls', {
 		this.spherical.makeSafe();
 		this.spherical.radius *= this.scale;
 		this.spherical.radius = Math.max( this.data.minDistance, Math.min( this.data.maxDistance, this.spherical.radius ) ); // restrict radius to be between desired limits
-
 		this.target.add( this.panOffset ); // move target to panned location
-
 		offset.setFromSpherical( this.spherical );
 
         offset.applyQuaternion( quatInverse ); // rotate offset back to "camera-up-vector-is-up" space
@@ -803,12 +796,8 @@ AFRAME.registerComponent('orbit-controls', {
         var target3D = this.target3D;
         if (target3D)
         {
-            // this.object.lookAt(this.vector.setFromMatrixPosition(target3D.matrixWorld).inverse());
-            this.lookAwayFrom( this.object, this.target3D );
+          this.lookAwayFrom( this.object, { position: this.target } ); // set camera looking at "virtual" target
         }
-        // this.object.lookAt( this.target );
-
-        // console.log( 'rot:', this.object.rotation.x, this.object.rotation.y, this.object.rotation.z );
 
 		if ( this.data.enableDamping === true ) {
 			this.sphericalDelta.theta *= ( 1 - this.data.dampingFactor );
